@@ -1,0 +1,80 @@
+tly got this small and cheap ABL sensor from Trianglelab store at aliexpress
+
+https://www.aliexpress.com/item/33006152423.html
+
+And after a couple days of tinkering I got it sorted out, so I thought I'd share the steps. I'm using a SKR mini E3 board.
+
+Also note that this sensor only works with metal beds (like spring steel + PEI). I tried on the original Creality surface and the original Creality glass bed but the sensor LED just doesn't turn on. Oh well.
+
+Steps:
+
+Print a support for the ABL sensor. You can use the one I designed, or print another one with 8mm hole. https://www.thingiverse.com/thing:4111147
+
+Make sure your bed is leveled against the Z endstop. The sensor will be installed along the existing Z endstop, so both will be working. The printer will home against the Z endstop as usual before probing.
+
+According to the sensor description, its head must be 1mm higher than the nozzle. So home your printer and turn it off. Keeping the Z at zero, put a 1mm spacer under the sensor and tighten it on the support.
+
+Slide the sensor cable inside the cable braid all the way to the mainboard. The provided cable should be long just enough.
+
+Connect the 3 sensor wires to the 3 'servo' pins of the board. You can use dupont connectors or solder a JST connector (I had one laying around from a LIPO balancer cable). The servo pins are GND, 5V, PA1 from top to bottom, so you need to connect blue, brown and black from top to bottom. Blue: ground, brown: 5V, black: signal. Refer to the SKR mini E3 diagram to be 100% sure.
+
+The wiring is done! Now on to the boring part, editing the firmware. Fire up VSCode and do the necessary changes. Some of those changes are taken from the TH3D EZABL config page.
+
+Marlin/src/pins/stm32/pins_BTT_SKR_MINI_E3_V1_2.h (swap servo pin with Z probe pin)
+
+#define SERVO0_PIN PC14
+
+#define Z_MIN_PROBE_PIN PA1
+
+Marlin/Configuration.h
+
+#define Z_MIN_PROBE_ENDSTOP_INVERTING true
+
+//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN // comment this out
+
+#define Z_MIN_PROBE_PIN PA1
+
+#define FIX_MOUNTED_PROBE
+
+#define NOZZLE_TO_PROBE_OFFSET { -23.66, -2, 0 } // those are values for my support, change them to your need
+
+#define Z_CLEARANCE_DEPLOY_PROBE 5
+
+#define Z_CLEARANCE_BETWEEN_PROBES 3
+
+#define Z_CLEARANCE_MULTI_PROBE 3
+
+#define Z_AFTER_PROBING 5
+
+#define Z_PROBE_LOW_POINT -3
+
+#define Z_PROBE_OFFSET_RANGE_MIN -5
+
+#define Z_PROBE_OFFSET_RANGE_MAX 5
+
+#define Z_MIN_PROBE_REPEATABILITY_TEST
+
+#define PROBING_HEATERS_OFF
+
+#define AUTO_BED_LEVELING_BILINEAR
+
+#define RESTORE_LEVELING_AFTER_G28
+
+#define GRID_MAX_POINTS_X 4 // you can use 3 here if it takes too long
+
+#define MULTIPLE_PROBING 2
+
+#define HOMING_FEEDRATE_XY (40*60)
+
+#define HOMING_FEEDRATE_Z (4*60)
+
+Compile and flash the firmware. Add G29 after G28 in your start gcode and slice some bed leveling STL. I also added a 3mm retraction just before G29 because filament kept oozing while probing.
+
+Start the print, the nozzle will most likely be too high from the bed. Use Tune > Babystep Z and change it on the fly until the first layer looks good (I needed -0,500)
+
+Stop the print, go to Configuration > Probe Z Offset and set the value you got babystepping. Then store to EEPROM.
+
+And that's all. Thanks to the users in this thread for hints/help.
+
+https://www.reddit.com/r/ender3/comments/dxzscp/help_skr_mini_e3_12_board_with_npn_no_bed_sensor/
+
