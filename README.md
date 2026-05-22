@@ -1,4 +1,4 @@
-# Marlin 3D Printer Firmware
+# Custom Marlin 3D Printer Firmware for an Ender 3 running an SKRMiniE3
 
 ![GitHub](https://img.shields.io/github/license/marlinfirmware/marlin.svg)
 ![GitHub contributors](https://img.shields.io/github/contributors/marlinfirmware/marlin.svg)
